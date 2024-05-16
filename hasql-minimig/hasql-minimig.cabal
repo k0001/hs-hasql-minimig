@@ -1,0 +1,52 @@
+cabal-version: 2.4
+name: hasql-minimig
+version: 0.1
+license: Apache-2.0
+license-file: LICENSE
+extra-source-files: README.md CHANGELOG.md
+author: Renzo Carbonara
+maintainer: renλren.zone
+copyright: Renzo Carbonara, 2024
+category: Databases
+build-type: Simple
+synopsis: Forward-only list-based migrations for Hasql
+description: Forward-only list-based migrations for Hasql
+homepage: https://github.com/k0001/hs-hasql-minimig
+bug-reports: https://github.com/k0001/hs-hasql-minimig/issues
+tested-with: GHC == 9.8.1
+
+common basic
+  default-language: GHC2021
+  ghc-options: -O2 -Wall
+  build-depends:
+    base == 4.*,
+  default-extensions:
+    BlockArguments
+    DeriveAnyClass
+    DerivingStrategies
+    LambdaCase
+    OverloadedRecordDot
+    OverloadedStrings
+
+library
+  import: basic
+  hs-source-dirs: lib
+  exposed-modules:
+    Hasql.Minimig
+  build-depends:
+    containers,
+    hasql,
+    hasql-transaction,
+    text,
+    time,
+
+test-suite test
+  import: basic
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: test
+  ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    hasql,
+    hasql-minimig,
+    hasql-transaction

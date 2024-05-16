@@ -1,0 +1,1 @@
+hasql-minimig/README.md
