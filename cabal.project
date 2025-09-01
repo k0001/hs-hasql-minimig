@@ -1,3 +1,7 @@
+packages:
+  hasql-minimig/
+
+--
 profiling: True
 profiling-detail: toplevel-functions
 executable-profiling: True
@@ -6,5 +10,3 @@ documentation: True
 benchmarks: True
 tests: True
 test-show-details: streaming
-packages:
-  hasql-minimig/
