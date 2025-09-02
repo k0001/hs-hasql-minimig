@@ -56,9 +56,14 @@
           {
             haskellProjects = mapListToAttrs (ghc: {
               basePackages = pkgs.haskell.packages.${ghc};
-              settings.hasql-minimig.check = false;
-              settings.hasql-minimig.haddock = true;
-              packages.brick.source = "2.9";
+              settings.hasql-minimig = {
+                check = false;
+                haddock = true;
+                libraryProfiling = true;
+              };
+              packages = {
+                brick.source = "2.9";
+              };
               autoWire = [
                 "packages"
                 "checks"
@@ -85,7 +90,7 @@
                 enable = true;
                 port = 32421;
                 initialScript.before = ''
-                  CREATE USER user1 WITH PASSWORD 'user1';
+                  CREATE USER user1 WITH ENCRYPTED PASSWORD 'user1';
                 '';
                 initialDatabases = [ { name = "db1"; } ];
                 initialScript.after = ''
@@ -93,12 +98,14 @@
                 '';
               };
               settings.processes.pgweb = {
-                environment.PGWEB_DATABASE_URL = p.config.services.postgres.pg1.connectionURI { dbName = "db1"; };
+                environment.PGWEB_DATABASE_URL = "postgres://user1:user1@127.0.0.1:32421/db1";
                 command = pkgs.pgweb;
                 depends_on."pg1".condition = "process_healthy";
               };
             };
-            packages.default = self'.packages.env-services;
+            apps.default = self'.packages.env-services;
+            packages.default = self'.packages.ghc9122-hasql-minimig;
+            packages.doc = self'.packages.ghc9122-hasql-minimig.doc;
             devShells.default = self'.devShells.ghc9122;
           };
       }
