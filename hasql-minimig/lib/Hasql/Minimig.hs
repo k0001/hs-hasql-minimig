@@ -39,6 +39,7 @@ module Hasql.Minimig {--}
     -- * Migrations
    , Migration (..)
    , MigrationId (..)
+   , fromDir
 
     -- * Miscellaneous
    , ErrMigrations (..)
@@ -49,19 +50,28 @@ where
 
 import Control.Exception qualified as Ex
 import Control.Monad
+import Control.Monad.IO.Class
+import Data.Bifunctor
+import Data.ByteString qualified as B
 import Data.Functor.Contravariant
 import Data.List qualified as List
+import Data.Map qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.String
 import Data.Text qualified as T
 import Data.Time qualified as Time
+import GHC.Show (appPrec)
 import Hasql.Decoders qualified as Hd
 import Hasql.Encoders qualified as He
 import Hasql.Session qualified as Hs
 import Hasql.Statement qualified as Hs
 import Hasql.Transaction qualified as Ht
 import Hasql.Transaction.Sessions qualified as Ht
+import Numeric.Natural
+import System.Directory qualified as D
+import System.FilePath qualified as F
+import Text.Parsec qualified as P
 
 -- | A single 'Migration' consisting of a 'Ht.Transaction'al action uniquely
 -- identified by a 'MigrationId'.
@@ -73,6 +83,13 @@ data Migration = Migration
    { id :: MigrationId
    , tx :: Ht.Transaction ()
    }
+
+instance Show Migration where
+   showsPrec n m =
+      showParen (n > appPrec) $
+         showString "Migration{id="
+            . shows m.id
+            . showString ", tx=..}"
 
 -- | 'Just' if at least one @a@ is duplicate.
 findDuplicate :: forall a. (Ord a) => [a] -> Maybe a
@@ -150,10 +167,14 @@ pushMigration tbl =
 
 data ErrMigrations
    = -- | The 'MigrationId' appears twice in the list of desired 'Migration's.
-     ErrMigrations_Duplicate MigrationId
+     ErrMigrations_DuplicateId MigrationId
    | -- | The history of ran migrations here as payload is incompatible with
      -- the list of desired 'Migration's.
      ErrMigrations_History [MigrationId]
+   | -- | Different migrations share the same order. Thrown by 'fromDir'.
+     ErrMigrations_DuplicateOrder Natural
+   | -- | Malformed migration file name. Thrown by 'fromDir'.
+     ErrMigrations_BadFileName FilePath
    deriving stock (Eq, Show)
    deriving anyclass (Ex.Exception)
 
@@ -215,9 +236,95 @@ history
    -- ascending chronological order.
    -> Ht.Transaction (Either ErrMigrations ([MigrationId], [MigrationId]))
 history tbl wantIds = case findDuplicate wantIds of
-   Just mId -> pure $ Left $ ErrMigrations_Duplicate mId
+   Just mId -> pure $ Left $ ErrMigrations_DuplicateId mId
    Nothing -> do
       ranIds <- Ht.statement () (ran tbl)
       pure $ case List.stripPrefix ranIds wantIds of
          Just pendIds -> Right (ranIds, pendIds)
          Nothing -> Left $ ErrMigrations_History ranIds
+
+--------------------------------------------------------------------------------
+
+-- | Given the path to a directory containing raw SQL migration files, obtain
+-- a list of 'Migration's in an order suitable to use with 'mitgrate'.
+--
+-- The directory is expected to contain only files with the following name
+-- format:
+--
+--     @<ORDER> '_' <ID> '.sql'@
+--
+-- Where @<ORDER>@ is a natural number with optional leading zeros, and @<ID>@
+-- is any string that will serve as 'MigrationId'. For example, the following
+-- are valid file names:
+--
+-- * @0_add_user_table.sql@
+--
+-- * @14_Silly name, but valid.sql@
+--
+-- * @007_.sql@
+--
+-- * @9__.sql.sql@
+--
+-- The migration files are sorted /numerically/ by its @<ORDER>@ value, with the
+-- smallest @<ORDER>@ being the first migration.
+--
+-- If there are files other than the @.sql@ files in the directory, this
+-- function will fail.
+--
+-- The contents of the @.sql@ file are put literally in a 'Ht.Transaction' in
+-- the @tx@ field of the corresponding `Migration`.
+--
+-- Note: It's OK to change value of @<ORDER>@ over time, as long as the
+-- relative ordering of migrations to each other remains the same. For example,
+-- maybe you decide that instead of using sequential numbers for ordering, you
+-- would like to use calendar dates in the @YYYYMMDD@ format. You could rename
+-- your file from names like `021_delete_coupons.sql` to
+-- `20252802_delete_coupons.sql`, and it will be alright. Just don't change the
+-- @delete_coupons@ part because that's the 'MigrationId'.
+fromDir :: (MonadIO m) => FilePath -> m [Migration]
+fromDir fp = liftIO do
+   xs <- fmap (fp F.</>) <$> D.listDirectory fp
+   ms <- traverse fromFile xs
+   fmap (Map.elems . fst) do
+      foldM
+         ( \(mo0, si0) (o, m) -> do
+            (,)
+               <$> Map.alterF
+                  ( \case
+                     Nothing -> pure $ Just m
+                     Just _ -> Ex.throwIO $ ErrMigrations_DuplicateOrder o
+                  )
+                  o
+                  mo0
+               <*> Set.alterF
+                  ( \case
+                     False -> pure True
+                     True -> Ex.throwIO $ ErrMigrations_DuplicateId m.id
+                  )
+                  m.id
+                  si0
+         )
+         (Map.empty, Set.empty)
+         ms
+
+fromFile :: (MonadIO m) => FilePath -> m (Natural, Migration)
+fromFile fp = liftIO do
+   let fn = F.takeFileName fp
+   case parseFileName fn of
+      Left _ -> Ex.throwIO $ ErrMigrations_BadFileName fn
+      Right (mOrd, mId) -> do
+         sql <- B.readFile fp
+         pure (mOrd, Migration mId (Ht.sql sql))
+
+parseFileName :: String -> Either String (Natural, MigrationId)
+parseFileName = \x -> first show $ P.parse p x x
+  where
+   p :: P.Parsec String () (Natural, MigrationId)
+   p = do
+      mOrd <- pNatural
+      _ <- P.char '_'
+      mId <- P.manyTill P.anyChar $ P.try (P.string ".sql" >> P.eof)
+      pure (mOrd, fromString mId)
+   pNatural :: P.Parsec String () Natural
+   pNatural =
+      foldl' (\ !b a -> b * 10 + (read [a])) 0 <$> P.many1 P.digit

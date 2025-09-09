@@ -1,0 +1,1 @@
+INSERT INTO t (x) VALUES (22);

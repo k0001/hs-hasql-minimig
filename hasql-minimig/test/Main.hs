@@ -10,7 +10,9 @@ import Hasql.Minimig qualified as Hm
 import Hasql.Session qualified as Hs
 import Hasql.Statement qualified as Hs
 import Hasql.Transaction qualified as Ht
+import Paths_hasql_minimig qualified
 import System.Environment (getEnv)
+import System.FilePath qualified as F
 
 --------------------------------------------------------------------------------
 
@@ -31,7 +33,7 @@ main = do
       ([], []) <- runMigs []
       ([], []) <- runMigs []
 
-      Left (Hm.ErrMigrations_Duplicate dup0) <- Ex.try $ runMigs [migA, migA]
+      Left (Hm.ErrMigrations_DuplicateId dup0) <- Ex.try $ runMigs [migA, migA]
       when (dup0 /= migA') $ fail "dup0"
 
       ([], new1) <- runMigs migsAB
@@ -65,6 +67,34 @@ main = do
       when (ran9 /= migsAB' <> migsCD') $ fail "ran9"
 
       [7, 8] <- runSess $ Hs.statement () st0
+
+      dd <- Paths_hasql_minimig.getDataDir
+
+      Ex.try (Hm.fromDir (dd F.</> "test/migs/dirty")) >>= \case
+         Left e
+            | Just (Hm.ErrMigrations_BadFileName "README.txt") <- Ex.fromException e -> pure ()
+            | otherwise -> fail $ "dirty: Unexpected exception: " <> show e
+         Right xs -> fail $ "dirty: Unexpected success: " <> show xs
+
+      Ex.try (Hm.fromDir (dd F.</> "test/migs/bad_ord")) >>= \case
+         Left e
+            | Just (Hm.ErrMigrations_DuplicateOrder 1) <- Ex.fromException e -> pure ()
+            | otherwise -> fail $ "dirty: Unexpected exception: " <> show e
+         Right xs -> fail $ "dirty: Unexpected success: " <> show xs
+
+      Ex.try (Hm.fromDir (dd F.</> "test/migs/bad_id")) >>= \case
+         Left e
+            | Just (Hm.ErrMigrations_DuplicateId "hello") <- Ex.fromException e -> pure ()
+            | otherwise -> fail $ "dirty: Unexpected exception: " <> show e
+         Right xs -> fail $ "dirty: Unexpected success: " <> show xs
+
+      let migsOK' = ["hello", "", "_", "_.sql", " wow, Fancy!"]
+      migsOK <- Hm.fromDir (dd F.</> "test/migs/ok")
+      when (migsOK' /= fmap (.id) migsOK) $ fail "migsOK: not OK!"
+      (ranOK, newOK) <- runMigs (migsAB <> migsCD <> migsOK)
+      when (ranOK /= migsAB' <> migsCD') $ fail "ranOK"
+      when (newOK /= migsOK') $ fail "newOK"
+      [7, 8, 20, 21, 22, 23, 24] <- runSess $ Hs.statement () st0
 
       pure ()
   where

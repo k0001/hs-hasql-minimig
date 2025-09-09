@@ -14,6 +14,18 @@ description: Forward-only list-based migrations for Hasql
 homepage: https://github.com/k0001/hs-hasql-minimig
 bug-reports: https://github.com/k0001/hs-hasql-minimig/issues
 tested-with: GHC == 9.8.1
+data-files:
+  test/migs/bad_id/1_hello.sql
+  test/migs/bad_id/2_hello.sql
+  test/migs/bad_ord/001_other.sql
+  test/migs/bad_ord/1_hello.sql
+  test/migs/dirty/1_hello.sql
+  test/migs/dirty/README.txt
+  test/migs/ok/1_hello.sql
+  test/migs/ok/2_.sql
+  test/migs/ok/3__.sql
+  test/migs/ok/004__.sql.sql
+  test/migs/ok/06_ wow\, Fancy!.sql
 
 common basic
   default-language: GHC2021
@@ -34,9 +46,13 @@ library
   exposed-modules:
     Hasql.Minimig
   build-depends:
+    bytestring,
     containers,
+    directory,
+    filepath,
     hasql,
     hasql-transaction,
+    parsec,
     text,
     time,
 
@@ -47,6 +63,12 @@ test-suite test
   hs-source-dirs: test
   ghc-options: -O2 -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
+    filepath,
     hasql,
     hasql-minimig,
-    hasql-transaction
+    hasql-transaction,
+  other-modules:
+    Paths_hasql_minimig
+  autogen-modules:
+    Paths_hasql_minimig
+

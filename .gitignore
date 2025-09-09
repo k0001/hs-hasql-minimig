@@ -8,3 +8,5 @@
 !hasql-minimig/*.cabal
 !hasql-minimig/*.md
 !hasql-minimig/**/*.hs
+!hasql-minimig/test/migs/**/*.sql
+!hasql-minimig/test/migs/**/*.txt
