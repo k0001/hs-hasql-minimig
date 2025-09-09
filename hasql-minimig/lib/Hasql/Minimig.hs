@@ -19,6 +19,21 @@
 --        ]
 --     @
 --
+--     Alternatively, if you would prefer to store your 'Migration's as files in
+--     the filesystem, use "Hmm".'fromDir' to obtain the list of
+--     "Hmm".'Migration's, possibly in combination with
+--     [@Cabal@'s @Paths_/xxxxx/@](https://cabal.readthedocs.io/en/3.4/cabal-package.html#accessing-data-files-from-package-code). For example, if your @.cabal@ file lists all your 'Migration's in the directory named @migrations@,
+--     having its contents explicitly mentioned in the @.cabal@'s file @data-files@ entry:
+--
+--     @
+--     import "System.FilePath" ('System.Filepath.</>')
+--
+--     __getMigrations__ :: 'IO' ["Hmm".'Migration']
+--     __getMigrations__ = do
+--        dataDir <- Paths_/xxxxx/.getDataDir
+--        "Hmm".'fromDir' (dataDir 'System.FilePath.</>' \"migrations\")
+--     @
+--
 -- 3. Run any 'Migration's that haven't been run yet, if necessary, by performing
 --    'migrate' once as soon as you obtain your 'Hasql.Connection.Connection',
 --    or 'Hasql.Pool' perhaps.  'migrate' will enforce that the 'MigrationId's,
@@ -180,6 +195,8 @@ data ErrMigrations
 
 -- | Run all the migrations in 'Migration's that haven't been run yet.
 --
+-- A single serializable transaction is used to run all the 'Migration's.
+--
 -- If the migrations table doesn't exist, it will be created.
 --
 -- Returns the 'MigrationId's that were in the migrations table before, and
@@ -246,14 +263,14 @@ history tbl wantIds = case findDuplicate wantIds of
 --------------------------------------------------------------------------------
 
 -- | Given the path to a directory containing raw SQL migration files, obtain
--- a list of 'Migration's in an order suitable to use with 'mitgrate'.
+-- a list of 'Migration's in an order suitable to use with 'migrate'.
 --
 -- The directory is expected to contain only files with the following name
 -- format:
 --
---     @<ORDER> '_' <ID> '.sql'@
+--     @\<ORDER> '_' \<ID> '.sql'@
 --
--- Where @<ORDER>@ is a natural number with optional leading zeros, and @<ID>@
+-- Where @\<ORDER>@ is a natural number with optional leading zeros, and @\<ID>@
 -- is any string that will serve as 'MigrationId'. For example, the following
 -- are valid file names:
 --
@@ -265,8 +282,8 @@ history tbl wantIds = case findDuplicate wantIds of
 --
 -- * @9__.sql.sql@
 --
--- The migration files are sorted /numerically/ by its @<ORDER>@ value, with the
--- smallest @<ORDER>@ being the first migration.
+-- The migration files are sorted /numerically/ by its @\<ORDER>@ value, with the
+-- smallest @\<ORDER>@ being the earliest migration.
 --
 -- If there are files other than the @.sql@ files in the directory, this
 -- function will fail.
@@ -274,7 +291,7 @@ history tbl wantIds = case findDuplicate wantIds of
 -- The contents of the @.sql@ file are put literally in a 'Ht.Transaction' in
 -- the @tx@ field of the corresponding `Migration`.
 --
--- Note: It's OK to change value of @<ORDER>@ over time, as long as the
+-- Note: It's OK to change value of @\<ORDER>@ over time, as long as the
 -- relative ordering of migrations to each other remains the same. For example,
 -- maybe you decide that instead of using sequential numbers for ordering, you
 -- would like to use calendar dates in the @YYYYMMDD@ format. You could rename
