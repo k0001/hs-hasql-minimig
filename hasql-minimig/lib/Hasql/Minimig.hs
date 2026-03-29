@@ -153,18 +153,18 @@ ran
    -- * @"\\"public\\".\\"My MiGrAtIoNs\\"\"@
    -> Hs.Statement () [MigrationId]
 ran tbl =
-   Hs.Statement
+   Hs.unpreparable
       ("SELECT id FROM " <> fromString (T.unpack tbl) <> " ORDER BY ord ASC")
       mempty
       (Hd.rowList (Hd.column (Hd.nonNullable (MigrationId <$> Hd.text))))
-      False
+
 
 pushMigration
    :: T.Text
    -- ^ Escaped name of the migrations table. Possibly schema-qualified.
    -> Hs.Statement MigrationId Time.UTCTime
 pushMigration tbl =
-   Hs.Statement
+   Hs.preparable
       ( "INSERT INTO "
          <> fromString (T.unpack tbl)
          <> " (ord, time, id)"
@@ -176,7 +176,6 @@ pushMigration tbl =
       )
       (He.param (He.nonNullable ((.text) >$< He.text)))
       (Hd.singleRow $ Hd.column (Hd.nonNullable Hd.timestamptz))
-      True
 
 --------------------------------------------------------------------------------
 

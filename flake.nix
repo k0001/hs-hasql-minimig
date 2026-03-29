@@ -1,10 +1,14 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?rev=46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9";
     flake-parts.url = "github:hercules-ci/flake-parts";
     haskell-flake.url = "github:srid/haskell-flake";
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
     services-flake.url = "github:juspay/services-flake";
+    hasql-transaction.url = "github:nikita-volkov/hasql-transaction/1.2.2";
+    hasql-transaction.flake = false;
+    hasql.url = "github:nikita-volkov/hasql/1.10.3";
+    hasql.flake = false;
   };
   outputs =
     inputs@{
@@ -56,13 +60,20 @@
           {
             haskellProjects = mapListToAttrs (ghc: {
               basePackages = pkgs.haskell.packages.${ghc};
-              settings.hasql-minimig = {
-                check = false;
-                haddock = true;
-                libraryProfiling = true;
+              settings = {
+                hasql-minimig = {
+                  check = false;
+                  haddock = true;
+                  libraryProfiling = true;
+                };
+                postgresql-binary.check = false;
+                hasql.check = false;
+                hasql-transaction.check = false;
               };
               packages = {
-                brick.source = "2.9";
+                hasql-transaction.source = inputs.hasql-transaction;
+                hasql.source = inputs.hasql;
+                postgresql-binary.source = "0.15.0.1";
               };
               autoWire = [
                 "packages"

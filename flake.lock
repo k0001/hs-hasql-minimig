@@ -5,11 +5,11 @@
         "nixpkgs-lib": "nixpkgs-lib"
       },
       "locked": {
-        "lastModified": 1754487366,
-        "narHash": "sha256-pHYj8gUBapuUzKV/kN/tR3Zvqc7o6gdFB9XKXIp1SQ8=",
+        "lastModified": 1772408722,
+        "narHash": "sha256-rHuJtdcOjK7rAHpHphUb1iCvgkU3GpfvicLMwwnfMT0=",
         "owner": "hercules-ci",
         "repo": "flake-parts",
-        "rev": "af66ad14b28a127c5c0f3bbb298218fc63528a18",
+        "rev": "f20dc5d9b8027381c474144ecabc9034d6a839a3",
         "type": "github"
       },
       "original": {
@@ -20,42 +20,76 @@
     },
     "haskell-flake": {
       "locked": {
-        "lastModified": 1756607542,
-        "narHash": "sha256-+99fEAk0HwjYgIW2tEOs7ayBDxnU9NAM5E29ZxgyX40=",
+        "lastModified": 1774313796,
+        "narHash": "sha256-FgiNatPM+8jy6mhKQ0mOt+ZeMMAnU7JrE4oo7og97Pk=",
         "owner": "srid",
         "repo": "haskell-flake",
-        "rev": "73e3891fb135c679a1c30fae4b101e5b41b8ca61",
+        "rev": "4043c14ed219282248e1097dbcbb7ea72203050a",
         "type": "github"
       },
       "original": {
         "owner": "srid",
         "repo": "haskell-flake",
+        "type": "github"
+      }
+    },
+    "hasql": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772439951,
+        "narHash": "sha256-jY6zMeWfeK+CpFhHsPDVtMwzc1J58O4CN1wFJQjijFQ=",
+        "owner": "nikita-volkov",
+        "repo": "hasql",
+        "rev": "a15d3f60030c5198f37d5c122baef0e9c74f5a29",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nikita-volkov",
+        "ref": "1.10.3",
+        "repo": "hasql",
+        "type": "github"
+      }
+    },
+    "hasql-transaction": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767737403,
+        "narHash": "sha256-3N07okX92/DnGM8wfIftPTRoBcTfal+Bg1icMCBwlWI=",
+        "owner": "nikita-volkov",
+        "repo": "hasql-transaction",
+        "rev": "6cb37f68bf6f5d378f15bace9d054c6d5ad99583",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nikita-volkov",
+        "ref": "1.2.2",
+        "repo": "hasql-transaction",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1756636162,
-        "narHash": "sha256-mBecwgUTWRgClJYqcF+y4O1bY8PQHqeDpB+zsAn+/zA=",
+        "lastModified": 1774386573,
+        "narHash": "sha256-4hAV26quOxdC6iyG7kYaZcM3VOskcPUrdCQd/nx8obc=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "37ff64b7108517f8b6ba5705ee5085eac636a249",
+        "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixpkgs-unstable",
         "repo": "nixpkgs",
+        "rev": "46db2e09e1d3f113a13c0d7b81e2f221c63b8ce9",
         "type": "github"
       }
     },
     "nixpkgs-lib": {
       "locked": {
-        "lastModified": 1753579242,
-        "narHash": "sha256-zvaMGVn14/Zz8hnp4VWT9xVnhc8vuL3TStRqwk22biA=",
+        "lastModified": 1772328832,
+        "narHash": "sha256-e+/T/pmEkLP6BHhYjx6GmwP5ivonQQn0bJdH9YrRB+Q=",
         "owner": "nix-community",
         "repo": "nixpkgs.lib",
-        "rev": "0f36c44e01a6129be94e3ade315a5883f0228a6e",
+        "rev": "c185c7a5e5dd8f9add5b2f8ebeff00888b070742",
         "type": "github"
       },
       "original": {
@@ -66,11 +100,11 @@
     },
     "process-compose-flake": {
       "locked": {
-        "lastModified": 1749418557,
-        "narHash": "sha256-wJHHckWz4Gvj8HXtM5WVJzSKXAEPvskQANVoRiu2w1w=",
+        "lastModified": 1767863885,
+        "narHash": "sha256-XXekPAxzbv1DmHFo3Elmj/vDnvWc1V0jdDUvM0/Wf7k=",
         "owner": "Platonic-Systems",
         "repo": "process-compose-flake",
-        "rev": "91dcc48a6298e47e2441ec76df711f4e38eab94e",
+        "rev": "99bea96cf269cfd235833ebdf645b567069fd398",
         "type": "github"
       },
       "original": {
@@ -83,6 +117,8 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "haskell-flake": "haskell-flake",
+        "hasql": "hasql",
+        "hasql-transaction": "hasql-transaction",
         "nixpkgs": "nixpkgs",
         "process-compose-flake": "process-compose-flake",
         "services-flake": "services-flake"
@@ -90,11 +126,11 @@
     },
     "services-flake": {
       "locked": {
-        "lastModified": 1756600705,
-        "narHash": "sha256-MRsbapTbaHI17JJ8axMRf6uQaiDf+D3I+AbxkHqxDiY=",
+        "lastModified": 1774745897,
+        "narHash": "sha256-yywDg5+GMlRnL3JoEBepiLaHGIBty+nyD8SKn7p6sQE=",
         "owner": "juspay",
         "repo": "services-flake",
-        "rev": "383348cffc753cde22b67b3e7a3aa65e4a9f28e9",
+        "rev": "a74589f06e0c1ce616f1381026a2a12b208c48a2",
         "type": "github"
       },
       "original": {

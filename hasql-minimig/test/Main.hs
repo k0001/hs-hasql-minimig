@@ -25,7 +25,7 @@ main = do
    putStrLn $ "HASQL_MINIMIG_TEST_CONNSTRING: " <> connString
    Ex.bracket (connect connString) Hc.release \conn -> do
       let runSess :: Hs.Session a -> IO a
-          runSess = \s -> Hs.run s conn >>= either Ex.throwIO pure
+          runSess = Hc.use conn >=> either (Ex.throwIO . userError . show) pure
           runMigs :: [Hm.Migration] -> IO ([Hm.MigrationId], [Hm.MigrationId])
           runMigs = \ms ->
             runSess (Hm.migrate "migs" ms) >>= either Ex.throwIO pure
@@ -125,8 +125,7 @@ main = do
 
    st0 :: Hs.Statement () [Int32]
    st0 =
-      Hs.Statement
+      Hs.unpreparable
          "SELECT x FROM t ORDER BY x"
          mempty
          (Hd.rowList (Hd.column (Hd.nonNullable Hd.int4)))
-         False
