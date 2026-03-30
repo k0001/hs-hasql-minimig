@@ -158,7 +158,6 @@ ran tbl =
       mempty
       (Hd.rowList (Hd.column (Hd.nonNullable (MigrationId <$> Hd.text))))
 
-
 pushMigration
    :: T.Text
    -- ^ Escaped name of the migrations table. Possibly schema-qualified.
@@ -215,7 +214,8 @@ migrate
    -- ^ 'Migration's representing the desired state of the database, in
    -- ascending chronological order.
    -> Hs.Session (Either ErrMigrations ([MigrationId], [MigrationId]))
-migrate tbl want = Ht.transaction Ht.Serializable Ht.Write $ migrate' tbl want
+migrate tbl want =
+   Ht.transactionNoRetry Ht.Serializable Ht.Write $ migrate' tbl want
 
 -- | Like 'migrate', but a 'Ht.Transaction'.
 migrate'
